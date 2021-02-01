@@ -1,4 +1,4 @@
-Dim gWORKER As Boolean
+Dim Abadry As Boolean
 
 
 #If VBA7 Then ' Excel 2010 or later
@@ -13,7 +13,7 @@ End Sub
 #End If
 
 Private Sub btn_start_Click()
-    gWORKER = True
+    Abadry = True
     
     ProcessIP
     
@@ -34,7 +34,7 @@ Private Sub ProcessIP()
         lbl_currentIPRow.Caption = IPRow
     
         ' Stopp?
-        If gWORKER = False Then
+        If Abadry = False Then
             SetStatus ("Stopped")
             Exit Do
         End If
@@ -59,7 +59,7 @@ Private Sub ProcessIP()
             ' IP range start
             Do
                 ' Stoppen?
-                If gWORKER = False Then
+                If Abadry = False Then
                     SetStatus ("Stopped")
                     Exit Do
                 End If
@@ -210,7 +210,7 @@ Private Sub btn_start_MouseUp(ByVal Button As Integer, ByVal Shift As Integer, B
 End Sub
 
 Private Sub btn_stop_Click()
-    gWORKER = False
+    Abadry = False
 End Sub
 
 Private Sub lbl_status_Click()
@@ -218,7 +218,7 @@ Private Sub lbl_status_Click()
 End Sub
 
 Private Sub UserForm_Terminate()
-    gWORKER = False
+    Abadry = False
 End Sub
 
 Private Function GetApiKeyFromConfig() As String
