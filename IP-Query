@@ -1,0 +1,108 @@
+' holds the IP API Key
+Dim gAPI_KEY As String
+
+' holds the result of the actual IP API
+Public Enum IPHttpRequest
+ UnknownError
+ RateLimitReached
+ AccessDenied
+ OK
+End Enum
+
+' holds the overall result of the IP API Request (incl. payload data)
+Public Type IPResult
+    httpRequest As IPHttpRequest
+    
+    data As Object
+    IPV As Integer
+    Wlist As String
+    Country As String
+    pub As String
+    abuse As String
+    ISP As String
+    Domain As String
+    hostname As String
+    CName As String
+    total As Integer
+    Report As Date
+    
+End Type
+
+Public Sub SetApiKey(apiKey As String)
+    If Worksheets("Config").Range("B2").Value = "" Then
+    apiKey = InputBox("Enter Your IP API Key")
+    Worksheets("Config").Range("B2").Value = apiKey
+    End If
+    
+    gAPI_KEY = apiKey
+    ActiveWorkbook.Sheets("IPsList").Activate
+    
+   
+   ActiveSheet.Unprotect
+     'EngSelect.Show
+    'Range("E5").Value = InputBox("Preferred Engine 1 - Case Sensitive as IP Ex: Syamntec, FireEye, Sophos, Kaspersky")
+    'Range("F5").Value = InputBox("Preferred Engine 2 - Case Sensitive as IP Ex: Syamntec, FireEye, Sophos, Kaspersky")
+    
+ ActiveSheet.Protect DrawingObjects:=False, Contents:=True, Scenarios:= _
+        False, AllowFormattingCells:=True, AllowFormattingColumns:=True, _
+        AllowFormattingRows:=True, AllowDeletingColumns:=True, AllowDeletingRows _
+        :=True, AllowFiltering:=True
+    
+End Sub
+
+
+
+Public Function CheckIP(IP As String) As IPResult
+    On Error Resume Next
+    
+    'Our tmp result variable
+    Dim result As IPResult
+    Dim ipAddress As Parameters
+    
+    'Setup request to IP
+    Dim xmlhttp As New MSXML2.XMLHTTP60, apiurl As String
+    apiurl = "https://api.abuseipdb.com/api/v2/check?verbose=&maxAgeInDays=90&ipAddress=" & IP
+    xmlhttp.Open "GET", apiurl, False
+    xmlhttp.setRequestHeader "Key", gAPI_KEY
+    xmlhttp.setRequestHeader "Accept", "application/json"
+    
+
+    'Send it
+
+    xmlhttp.Send
+    
+    
+    'check the response
+    Select Case xmlhttp.status
+        Case 200:
+            result.httpRequest = IPHttpRequest.OK
+            
+            Dim Json As Object
+            Set Json = JsonConverter.ParseJson(xmlhttp.responseText)
+
+            Set data = Json("data")
+            result.pub = data("isPublic")
+            result.Wlist = data("isWhitelisted")
+            result.abuse = data("abuseConfidenceScore")
+            result.Country = data("countryCode")
+            result.ISP = data("isp")
+            result.Domain = data("domain")
+            result.hostname = data("hostnames")
+            result.CName = data("countryName")
+            result.total = data("totalReports")
+            result.Report = data("lastReportedAt")
+            
+        
+        
+            
+        Case 204:
+            result.httpRequest = IPHttpRequest.RateLimitReached
+        Case 1223:
+            result.httpRequest = IPHttpRequest.RateLimitReached
+        Case 403:
+            result.httpRequest = IPHttpRequest.AccessDenied
+        Case Else:
+    End Select
+
+    CheckIP = result
+End Function
